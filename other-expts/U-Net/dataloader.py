@@ -11,8 +11,8 @@ from utils import Get_Data_From_File, Preprocess_Data, Play_Audio_From_Wav, Play
 
 #Initializing Training_Data Directories
 Base_Path = os.getcwd()
-Clean_Dir = Base_Path + "/Training_Data/CleanSpeech_training/"
-Noisy_Dir = Base_Path + "/Training_Data/NoisySpeech_training/"
+Clean_Dir = f"{Base_Path}/Training_Data/CleanSpeech_training/"
+Noisy_Dir = f"{Base_Path}/Training_Data/NoisySpeech_training/"
 
 def Load_Data():
 

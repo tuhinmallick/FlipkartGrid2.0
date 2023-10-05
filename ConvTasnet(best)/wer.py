@@ -33,7 +33,9 @@ for i in range(len(transcript_files)):
         wer_score.append(error)
         audio_id.append(f)
         # exit()
-print("min: {}, mean: {}, max: {}".format(min(wer_score), sum(wer_score)/len(wer_score), max(wer_score)))
+print(
+    f"min: {min(wer_score)}, mean: {sum(wer_score) / len(wer_score)}, max: {max(wer_score)}"
+)
 
 wer_result = pd.DataFrame()
 wer_result["ID"] = audio_id

@@ -29,7 +29,7 @@ class Audio(Dataset):
             new_clean, _ = audio_utils.audioread(self.clean_files[ind_f])
             clean = np.append(clean, np.zeros(int(self.sr*self.audio_length)))
             clean = np.append(clean, new_clean)
-        
+
         noise_f = self.noise_files[np.random.randint(0, len(self.noise_files))]
         noise, _ = audio_utils.audioread(noise_f)
         while len(noise) < len(clean):
@@ -37,13 +37,13 @@ class Audio(Dataset):
             new_noise, _ = audio_utils.audioread(self.noise_files[ind_f])
             noise = np.append(noise, np.zeros(int(self.sr*self.audio_length)))
             noise = np.append(noise, new_noise)
-        noise = noise[0:len(clean)]
+        noise = noise[:len(clean)]
 
         random_snr = random.randint(self.snr_lower, self.snr_upper)
         clean_snr, noise_snr, noisy_snr = audio_utils.snr_mixer(clean=clean, noise=noise, snr=random_snr)
-        clean_snr = clean_snr[0:audio_length]
-        noise_snr = noise_snr[0:audio_length]
-        noisy_snr = noisy_snr[0:audio_length]
+        clean_snr = clean_snr[:audio_length]
+        noise_snr = noise_snr[:audio_length]
+        noisy_snr = noisy_snr[:audio_length]
         noisy_1 = noisy_snr
 
         noise_f = self.noise_files[np.random.randint(0, len(self.noise_files))]
@@ -53,13 +53,13 @@ class Audio(Dataset):
             new_noise, _ = audio_utils.audioread(self.noise_files[ind_f])
             noise = np.append(noise, np.zeros(int(self.sr*self.audio_length)))
             noise = np.append(noise, new_noise)
-        noise = noise[0:len(clean)]
+        noise = noise[:len(clean)]
 
         random_snr = random.randint(self.snr_lower, self.snr_upper)
         clean_snr, noise_snr, noisy_snr = audio_utils.snr_mixer(clean=clean, noise=noise, snr=random_snr)
-        clean_snr = clean_snr[0:audio_length]
-        noise_snr = noise_snr[0:audio_length]
-        noisy_snr = noisy_snr[0:audio_length]
+        clean_snr = clean_snr[:audio_length]
+        noise_snr = noise_snr[:audio_length]
+        noisy_snr = noisy_snr[:audio_length]
         noisy_2 = noisy_snr
-        
+
         return noisy_1, noisy_2

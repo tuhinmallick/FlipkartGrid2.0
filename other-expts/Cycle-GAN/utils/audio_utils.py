@@ -9,18 +9,13 @@ def audioread(path, norm=True, start=0, stop=None):
     except RuntimeError:
         print('WARNING: Audio type not supported') 
 
-    if len(x.shape) == 1:
-        if norm:
-            rms = (x ** 2).mean() ** 0.5
-            scalar = 10 ** (-25 / 20) / (rms)
-            x = x * scalar
-    else:
+    if len(x.shape) != 1:
         x = x.T
         x = x.sum(axis=0)/x.shape[0]
-        if norm:
-            rms = (x ** 2).mean() ** 0.5
-            scalar = 10 ** (-25 / 20) / (rms)
-            x = x * scalar
+    if norm:
+        rms = (x ** 2).mean() ** 0.5
+        scalar = 10 ** (-25 / 20) / (rms)
+        x = x * scalar
     return x, sampling_rate
 
 def snr_mixer(clean, noise, snr):

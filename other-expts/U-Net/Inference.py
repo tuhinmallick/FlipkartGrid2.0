@@ -17,10 +17,17 @@ from jiwer import wer
 
 #Function to save predicted transcripts
 def Save(response, file_name):
-	if os.path.exists(os.getcwd() + "/Enhanced_Files/Predicted_Transcripts/") == False:
-		os.mkdir(os.getcwd() + "/Enhanced_Files/Predicted_Transcripts/")
+	if (
+		os.path.exists(f"{os.getcwd()}/Enhanced_Files/Predicted_Transcripts/")
+		== False
+	):
+		os.mkdir(f"{os.getcwd()}/Enhanced_Files/Predicted_Transcripts/")
 
-	file_name = os.getcwd() + "/Enhanced_Files/Predicted_Transcripts/" + file_name[:-4] + ".txt"
+	file_name = (
+		f"{os.getcwd()}/Enhanced_Files/Predicted_Transcripts/"
+		+ file_name[:-4]
+		+ ".txt"
+	)
 
 	with open(file_name, 'w') as outfile:
 		json.dump(response, outfile)
@@ -31,17 +38,16 @@ def ASR(audio_sample):
 	url = 'https://dev.liv.ai/liv_transcription_api/recordings/'
 	files = {'audio_file' : open(audio_sample,'rb')}
 	data = {'user' : '310' ,'language' : 'HI'}
-	
-	res = (requests.post(url, headers = headers, data = data, files = files)).json()
-	return res
+
+	return (requests.post(url, headers=headers, data=data, files=files)).json()
 
 #Predict Function
 def Predict(Files, sr, verbosity_option, asr):
-	if os.path.exists(os.getcwd()+"/Enhanced_Files/") == False:
-		os.mkdir(os.getcwd()+"/Enhanced_Files/")
+	if os.path.exists(f"{os.getcwd()}/Enhanced_Files/") == False:
+		os.mkdir(f"{os.getcwd()}/Enhanced_Files/")
 
 	Inference_Time = []
-	
+
 	for test_sample in tqdm(Files):
 		enhanced_sample, infer_time = Enhance_Speech(test_sample, sr, verbosity_option)
 		if asr:

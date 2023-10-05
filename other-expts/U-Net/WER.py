@@ -18,13 +18,24 @@ from jiwer import wer
 
 def Save(response, file_name, mode):
 	if mode == 0:
-		if path.exists(os.getcwd() + "/Enhanced_Files/Noisy_Transcripts/") == False:
-			os.mkdir(os.getcwd() + "/Enhanced_Files/Noisy_Transcripts/")
-		file_name = os.getcwd() + "/Enhanced_Files/Noisy_Transcripts/" + file_name[:-4] + ".txt"
+		if path.exists(f"{os.getcwd()}/Enhanced_Files/Noisy_Transcripts/") == False:
+			os.mkdir(f"{os.getcwd()}/Enhanced_Files/Noisy_Transcripts/")
+		file_name = (
+			f"{os.getcwd()}/Enhanced_Files/Noisy_Transcripts/"
+			+ file_name[:-4]
+			+ ".txt"
+		)
 	else:
-		if path.exists(os.getcwd() + "/Enhanced_Files/Predicted_Transcripts/") == False:
-			os.mkdir(os.getcwd() + "/Enhanced_Files/Predicted_Transcripts/")
-		file_name = os.getcwd() + "/Enhanced_Files/Predicted_Transcripts/" + file_name[:-4] + ".txt"
+		if (
+			path.exists(f"{os.getcwd()}/Enhanced_Files/Predicted_Transcripts/")
+			== False
+		):
+			os.mkdir(f"{os.getcwd()}/Enhanced_Files/Predicted_Transcripts/")
+		file_name = (
+			f"{os.getcwd()}/Enhanced_Files/Predicted_Transcripts/"
+			+ file_name[:-4]
+			+ ".txt"
+		)
 
 	with open(file_name, 'w') as outfile:
 		json.dump(response, outfile)
@@ -78,9 +89,8 @@ url = 'https://dev.liv.ai/liv_transcription_api/recordings/'
 def ASR(audio_sample):
 	files = {'audio_file' : open(audio_sample,'rb')}
 	data = {'user' : '310' ,'language' : 'HI'}
-	
-	res = (requests.post(url, headers = headers, data = data, files = files)).json()
-	return res
+
+	return (requests.post(url, headers=headers, data=data, files=files)).json()
 
 
 WER()

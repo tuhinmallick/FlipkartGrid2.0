@@ -25,8 +25,7 @@ def ASR(audio_sample):
     data = {'user' : '310' ,'language' : 'HI'}
     files = {'audio_file' : open(audio_sample,'rb')}
     url = 'https://dev.liv.ai/liv_transcription_api/recordings/'
-    res = (requests.post(url, headers = headers, data = data, files = files)).json()
-    return res
+    return (requests.post(url, headers=headers, data=data, files=files)).json()
 
 if __name__ == "__main__":
 
@@ -36,8 +35,10 @@ if __name__ == "__main__":
     ckpt = torch.load(checkpoint_path)
     denoiser.load_state_dict(ckpt)
 
-    print("Loading saved model from {}".format(checkpoint_path))
-    print("Model initialised, number of params : {}M".format(sum(p.numel() for p in denoiser.parameters())/1e6))
+    print(f"Loading saved model from {checkpoint_path}")
+    print(
+        f"Model initialised, number of params : {sum(p.numel() for p in denoiser.parameters()) / 1000000.0}M"
+    )
 
     inp = args.input
     output = args.output
@@ -61,8 +62,8 @@ if __name__ == "__main__":
         raise Exception("given input file/directory does not exist please check path")
 
     if len(noisy_files) == 0:
-        raise Exception("folder does not contain files of format {}".format(args.format))
-    
+        raise Exception(f"folder does not contain files of format {args.format}")
+
     time_counter = []
 
     for f in noisy_files:

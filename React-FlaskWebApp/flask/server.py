@@ -64,31 +64,24 @@ def token():
     password = request.form['password']
 
     cursor = db.cursor()
-    query  = "SELECT * FROM " + table + " WHERE " + column + " = \"" + name +"\""
+    query = f"SELECT * FROM {table} WHERE {column}" + " = \"" + name + "\""
     cursor.execute(query)
     credential = cursor.fetchone()
     cursor.close()
 
-    if credential:
-        if str(credential[1]) == password:
-            try:
-                payload = {
-                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=0),
-                    'iat': datetime.datetime.utcnow(),
-                    'sub': name         
-                }
-                enc = jwt.encode(
-                    payload,
-                    jwt_secret,
-                    algorithm=alg
-                )
-                return enc
-            except:
-                return '500 : JWT couldnt be generated'
-        else:
-            return '405 : Password Mismatch'
-    else:
+    if not credential:
         return '404 : User not found'
+    if str(credential[1]) != password:
+        return '405 : Password Mismatch'
+    try:
+        payload = {
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=0),
+            'iat': datetime.datetime.utcnow(),
+            'sub': name         
+        }
+        return jwt.encode(payload, jwt_secret, algorithm=alg)
+    except:
+        return '500 : JWT couldnt be generated'
 
 
 
@@ -104,28 +97,27 @@ def handle_input(json):
         token = json['token']
     except:
         return emit('receive', '400 : Token Absent')
-    
+
     if token is not None:
         try:
             token   = bytes(token, 'utf-8')
             payload = jwt.decode(token, jwt_secret,algorithms=alg)
-            idx     = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(N))
+            idx = ''.join(
+                secrets.choice(string.ascii_uppercase + string.digits)
+                for _ in range(N)
+            )
 
-            inp       = 'input/'  + idx + '_noisy.wav'
-            op_clean  = 'output/' + idx + '_clean.wav'
-            op_noise  = 'output/' + idx + '_noise.wav'
+            inp = f'input/{idx}_noisy.wav'
+            op_clean = f'output/{idx}_clean.wav'
+            op_noise = f'output/{idx}_noise.wav'
             file_list = [inp, op_clean, op_noise]
 
-            w = open(inp, 'wb')
-            w.write(json['blob'])
-            w.close()
-
+            with open(inp, 'wb') as w:
+                w.write(json['blob'])
             infer(model, file_list)
 
-            r = open(op_clean, 'rb')
-            data = r.read()
-            r.close()
-
+            with open(op_clean, 'rb') as r:
+                data = r.read()
             emit('receive', data)
 
             if args['prod']:
