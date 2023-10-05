@@ -38,7 +38,7 @@ def main():
         os.makedirs(op_noise_dir)
     if not os.path.exists(op_noisy_dir):
         os.makedirs(op_noisy_dir)
-        
+
     audio_length = int(audio_length*sampling_rate)
     cleanfilenames = glob.glob(os.path.join(clean_dir, audioformat))
     noisefilenames = glob.glob(os.path.join(noise_dir, audioformat))
@@ -52,7 +52,7 @@ def main():
                 new_clean, _ = audio_utils.audioread(cleanfilenames[ind_f])
                 clean = np.append(clean, np.zeros(int(sampling_rate*silence_length)))
                 clean = np.append(clean, new_clean)
-            
+
             noise_f = noisefilenames[np.random.randint(0, len(noisefilenames))]
             noise, _ = audio_utils.audioread(noise_f)
             while len(noise) < len(clean):
@@ -60,16 +60,34 @@ def main():
                 new_noise, _ = audio_utils.audioread(noisefilenames[ind_f])
                 noise = np.append(noise, np.zeros(int(sampling_rate*silence_length)))
                 noise = np.append(noise, new_noise)
-            noise = noise[0:len(clean)]
+            noise = noise[:len(clean)]
 
             random_snr = random.randint(snr_lower, snr_upper)
             clean_snr, noise_snr, noisy_snr = audio_utils.snr_mixer(clean=clean, noise=noise, snr=random_snr)
-            clean_snr = clean_snr[0:audio_length]
-            noise_snr = noise_snr[0:audio_length]
-            noisy_snr = noisy_snr[0:audio_length]
-            audio_utils.audiowrite(clean_snr, sampling_rate, os.path.join(op_clean_dir, "clean_" + str(file_counter)+"_"+str(random_snr)+".wav"))
-            audio_utils.audiowrite(noise_snr, sampling_rate, os.path.join(op_noise_dir, "noise_" + str(file_counter)+"_"+str(random_snr)+".wav"))
-            audio_utils.audiowrite(noisy_snr, sampling_rate, os.path.join(op_noisy_dir, "noisy_" + str(file_counter)+"_"+str(random_snr)+".wav"))
+            clean_snr = clean_snr[:audio_length]
+            noise_snr = noise_snr[:audio_length]
+            noisy_snr = noisy_snr[:audio_length]
+            audio_utils.audiowrite(
+                clean_snr,
+                sampling_rate,
+                os.path.join(
+                    op_clean_dir, f"clean_{str(file_counter)}_{random_snr}.wav"
+                ),
+            )
+            audio_utils.audiowrite(
+                noise_snr,
+                sampling_rate,
+                os.path.join(
+                    op_noise_dir, f"noise_{str(file_counter)}_{random_snr}.wav"
+                ),
+            )
+            audio_utils.audiowrite(
+                noisy_snr,
+                sampling_rate,
+                os.path.join(
+                    op_noisy_dir, f"noisy_{str(file_counter)}_{random_snr}.wav"
+                ),
+            )
             pbar.update(1)            
 
 if __name__ == "__main__":

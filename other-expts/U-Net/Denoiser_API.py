@@ -30,28 +30,25 @@ def Predict(test_sample, model):
 	assert test_sample.size(-1) % 16384 == 0 and test_sample.dim() == 3
 	test_sample_chunks = list(torch.split(test_sample, 16384, dim=-1))
 
-	enhanced_chunks = []
-	for chunk in test_sample_chunks:
-		enhanced_chunks.append(model(chunk).detach().cpu())
-
+	enhanced_chunks = [model(chunk).detach().cpu() for chunk in test_sample_chunks]
 	enhanced = torch.cat(enhanced_chunks, dim=-1)  # [1, 1, T]
 	enhanced = enhanced if padded_length == 0 else enhanced[:, :, :-padded_length]
 
-	enhanced = enhanced.reshape(-1)
-
-	return enhanced
+	return enhanced.reshape(-1)
 
 
 #Main Function to Enhance Speech
 def Enhance_Speech(test_sample, sr, verbosity_option):
 
-	if os.path.exists(os.getcwd()+"/Enhanced_Files/Enhanced_Audio/") == False:
-		os.mkdir(os.getcwd()+"/Enhanced_Files/Enhanced_Audio/")
-	Save_Dir = os.getcwd()+"/Enhanced_Files/Enhanced_Audio/"
+	if os.path.exists(f"{os.getcwd()}/Enhanced_Files/Enhanced_Audio/") == False:
+		os.mkdir(f"{os.getcwd()}/Enhanced_Files/Enhanced_Audio/")
+	Save_Dir = f"{os.getcwd()}/Enhanced_Files/Enhanced_Audio/"
 
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-	Save_Name = os.path.splitext(os.path.basename(test_sample))[0] + "_Enhanced.wav"
+	Save_Name = (
+		f"{os.path.splitext(os.path.basename(test_sample))[0]}_Enhanced.wav"
+	)
 
 	#Load Model Architecture & saved weights
 	model = Model()

@@ -44,12 +44,12 @@ class CycleGANTrain:
         self.noisy_dir = args.noisy_dir
         self.clean_dir = args.clean_dir
         self.wandb = args.wandb
-        if self.wandb == None:
+        if self.wandb is None:
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(args.log)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(self.device)
-        
+
         self.generator_noisy2clean = model.Generator().to(self.device)
         self.generator_clean2noisy = model.Generator().to(self.device)
         self.discriminator_noisy = model.Discriminator().to(self.device)
@@ -108,7 +108,7 @@ class CycleGANTrain:
                 if num_iterations > self.start_decay:
                     self.adjust_lr_rate(self.generator_optim, name="generator")
                     self.adjust_lr_rate(self.discriminator_optim, name="discriminator")
-                
+
                 # do some stuff with the noisy data!
                 noisy = noisy.to(self.device).float()
                 fake_clean = self.generator_noisy2clean(noisy)
@@ -116,7 +116,7 @@ class CycleGANTrain:
                 cycle_noisy = self.generator_clean2noisy(fake_clean)
                 d_cycle_noisy = self.discriminator_noisy(cycle_noisy)
                 identity_noisy = self.generator_clean2noisy(noisy)
-                
+
                 clean = clean.to(self.device).float()
                 fake_noisy = self.generator_clean2noisy(clean)
                 d_fake_noisy = self.discriminator_noisy(fake_noisy)
@@ -147,7 +147,7 @@ class CycleGANTrain:
                 fake_noisy = self.generator_clean2noisy(clean)
                 d_fake_noisy = self.discriminator_noisy(fake_noisy)
                 d_fake_clean = self.discriminator_clean(fake_clean)
-                
+
                 d_loss_noisy_real = torch.mean((1 - d_real_noisy) ** 2)
                 d_loss_noisy_fake = torch.mean((0 - d_fake_noisy) ** 2)
                 d_loss_noisy = (d_loss_noisy_real + d_loss_noisy_fake) / 2.0
@@ -156,13 +156,13 @@ class CycleGANTrain:
                 d_loss_clean = (d_loss_clean_real + d_loss_clean_fake) / 2.0
                 d_loss = (d_loss_noisy + d_loss_clean) / 2.0
                 self.discriminator_loss.append(d_loss.item())
-                
+
                 self.generator_optim.zero_grad()
                 self.discriminator_optim.zero_grad()
                 self.generator_optim.zero_grad()
                 d_loss.backward()
                 self.discriminator_optim.step()
-                
+
                 if self.wandb:
                     log = {"Generator Loss": generator_loss.item(),
                             "Discriminator Loss" : d_loss.item(),
@@ -189,10 +189,10 @@ class CycleGANTrain:
 
             msg = "Iter:{}\t Generator Loss:{:.4f} Discrimator Loss:{:.4f} \tGA2B:{:.4f} GB2A:{:.4f} G_id:{:.4f} G_cyc:{:.4f} D_A:{:.4f} D_B:{:.4f}".format(num_iterations, generator_loss.item(), d_loss.item(), generator_loss_noisy2clean, generator_loss_clean2noisy, identity_loss, cycle_loss, d_loss_noisy, d_loss_clean)
             msg = f"{common.bcolors.RED}{msg}{common.bcolors.ENDC}"
-            print("{}".format(msg))
-                
+            print(f"{msg}")
+
             if epoch%5 == 0 and epoch !=0:
-                self.save_model_ckpt(epoch, "{}.tar".format(os.path.join(self.model_dir, str(epoch))))
+                self.save_model_ckpt(epoch, f"{os.path.join(self.model_dir, str(epoch))}.tar")
                 print(f"{common.bcolors.GREEN}MODEL SAVED!{common.bcolors.GREEN}")
                 self.valid(epoch)
                 
@@ -219,10 +219,14 @@ class CycleGANTrain:
 
         files = os.listdir(self.noisy_dir)
         indx = np.random.randint(0, len(files)-1)
-        
+
         path = os.path.join(self.noisy_dir, files[indx])
         wave = preprocess_utils.load_wave(path, sampling_rate)
-        librosa.output.write_wav(path=os.path.join(self.output_dir, str(epoch) + "_noisy.wav"), y=wave, sr=sampling_rate)
+        librosa.output.write_wav(
+            path=os.path.join(self.output_dir, f"{str(epoch)}_noisy.wav"),
+            y=wave,
+            sr=sampling_rate,
+        )
         if self.wandb:
             wandb.log({"NOISY-input": [wandb.Audio(wave, caption="noisy", sample_rate=sampling_rate)]})
 
@@ -243,7 +247,11 @@ class CycleGANTrain:
 
         decoded_clean = preprocess_utils.decode_spectral_envelop(clean_spect, sampling_rate)
         wave_clean = preprocess_utils.speech_synthesis(fund_freq, decoded_clean, aperiod, sampling_rate, frame_period)
-        librosa.output.write_wav(path=os.path.join(self.output_dir, str(epoch) + "_clean.wav"), y=wave_clean, sr=sampling_rate)
+        librosa.output.write_wav(
+            path=os.path.join(self.output_dir, f"{str(epoch)}_clean.wav"),
+            y=wave_clean,
+            sr=sampling_rate,
+        )
         if self.wandb:
             wandb.log({"CLEAN-output": [wandb.Audio(wave_clean, caption="clean", sample_rate=sampling_rate)]})
     

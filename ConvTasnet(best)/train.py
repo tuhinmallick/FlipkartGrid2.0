@@ -25,16 +25,24 @@ class Trainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print("running on device: ", self.device)
         self.model = model.Model(*model_params.values()).to(self.device)
-        print("Model initialised, number of params : {}M".format(sum(p.numel() for p in self.model.parameters())/1e6))
+        print(
+            f"Model initialised, number of params : {sum(p.numel() for p in self.model.parameters()) / 1000000.0}M"
+        )
         self.optimizer = optim.Adam(self.model.parameters(), lr=network_config["lr"], weight_decay=network_config["weight_decay"])
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode="min", factor=network_config["factor"], patience=network_config["patience"], min_lr=network_config["min_lr"])
 
         # set up dataloaders
         audio_format = network_config["audio_format"]
-        self.noisy_files = sorted(glob(os.path.join(network_config["noisy_dir"], "*"+audio_format)))
-        self.clean_files = sorted(glob(os.path.join(network_config["clean_dir"], "*"+audio_format)))
-        self.noise_files = sorted(glob(os.path.join(network_config["noise_dir"], "*"+audio_format)))
-        print("populated files. count: {}".format(len(self.noisy_files)))
+        self.noisy_files = sorted(
+            glob(os.path.join(network_config["noisy_dir"], f"*{audio_format}"))
+        )
+        self.clean_files = sorted(
+            glob(os.path.join(network_config["clean_dir"], f"*{audio_format}"))
+        )
+        self.noise_files = sorted(
+            glob(os.path.join(network_config["noise_dir"], f"*{audio_format}"))
+        )
+        print(f"populated files. count: {len(self.noisy_files)}")
 
         self.sr = network_config["sampling_rate"]
         self.audio_dataset = dataloader.Audio(self.noisy_files, self.clean_files, self.noise_files, self.sr)
@@ -69,7 +77,10 @@ class Trainer:
             wandb.log(log)
 
             if self.step%self.save_every == 0:
-                torch.save(self.model.state_dict(), os.path.join(self.output_dir, "{}.tar".format(self.step)))
+                torch.save(
+                    self.model.state_dict(),
+                    os.path.join(self.output_dir, f"{self.step}.tar"),
+                )
                 self.valid(self.step)
             if len(self.loss_counter)%self.step_every == 0:
                 last_100 = sum(self.loss_counter[-100:])/100
@@ -81,26 +92,56 @@ class Trainer:
         self.model.eval()
         index = random.randint(0, len(self.noisy_files)-1)
         noisy = dataloader.read_wav(self.noisy_files[index])
-        write_wav(os.path.join(self.output_dir, "noisy_{}.wav".format(step)), noisy)
+        write_wav(os.path.join(self.output_dir, f"noisy_{step}.wav"), noisy)
 
-        wandb.log({"noisy": [wandb.Audio(os.path.join(self.output_dir, "noisy_{}.wav".format(step)), caption="noisy", sample_rate=self.sr)]})
+        wandb.log(
+            {
+                "noisy": [
+                    wandb.Audio(
+                        os.path.join(self.output_dir, f"noisy_{step}.wav"),
+                        caption="noisy",
+                        sample_rate=self.sr,
+                    )
+                ]
+            }
+        )
 
         noisy = torch.tensor([noisy], dtype=torch.float32, device=self.device)
         with torch.no_grad():
             clean, noise = self.model(noisy)
 
         clean = np.squeeze(clean.cpu().detach().numpy())
-        write_wav(os.path.join(self.output_dir, "clean_{}.wav".format(step)), clean, self.sr)
-        wandb.log({"clean": [wandb.Audio(os.path.join(self.output_dir, "clean_{}.wav".format(step)), caption="clean", sample_rate=self.sr)]})
-        
+        write_wav(os.path.join(self.output_dir, f"clean_{step}.wav"), clean, self.sr)
+        wandb.log(
+            {
+                "clean": [
+                    wandb.Audio(
+                        os.path.join(self.output_dir, f"clean_{step}.wav"),
+                        caption="clean",
+                        sample_rate=self.sr,
+                    )
+                ]
+            }
+        )
+
         noise = np.squeeze(noise.cpu().detach().numpy())
-        write_wav(os.path.join(self.output_dir, "noise_{}.wav".format(step)), noise, self.sr)
-        wandb.log({"noise": [wandb.Audio(os.path.join(self.output_dir, "noise_{}.wav".format(step)), caption="noise", sample_rate=self.sr)]})
+        write_wav(os.path.join(self.output_dir, f"noise_{step}.wav"), noise, self.sr)
+        wandb.log(
+            {
+                "noise": [
+                    wandb.Audio(
+                        os.path.join(self.output_dir, f"noise_{step}.wav"),
+                        caption="noise",
+                        sample_rate=self.sr,
+                    )
+                ]
+            }
+        )
 
     def run(self):
         wandb.init(project="flipkart-grid")
         print("started training!")
-        for epoch in range(self.num_epochs):
+        for _ in range(self.num_epochs):
             self.train()
 
 if __name__ == "__main__":

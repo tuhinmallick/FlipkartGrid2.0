@@ -72,5 +72,4 @@ class AudioLoader(object):
         for chunks in self.audio_loader:
             chunk_list += chunks
             batch, chunk_list = self._merge(chunk_list)
-            for obj in batch:
-                yield obj
+            yield from batch

@@ -7,8 +7,7 @@ class bcolors:
     ENDC = '\033[0m'
 
 def parse_yaml(config_path):
-    config_file = yaml.safe_load(open(config_path, "r"))
-    return config_file
+    return yaml.safe_load(open(config_path, "r"))
 
 def start_log(config_file):
     print(f"{bcolors.RED}---------------------------------------{bcolors.ENDC}")

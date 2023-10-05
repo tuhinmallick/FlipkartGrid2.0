@@ -54,8 +54,8 @@ def Validate(model, validateloader):
 def Train(model, trainloader, validateloader):
 
 	#Directory to Save Models & Loss Plots
-	Model_Dir = os.getcwd() + "/MSNSD_Models/"
-	Fig_Dir = os.getcwd() + "/Training_Figures/"
+	Model_Dir = f"{os.getcwd()}/MSNSD_Models/"
+	Fig_Dir = f"{os.getcwd()}/Training_Figures/"
 
 	Epochs = 200  #Train 100 epochs
 	#print("Total Number of Samples to train : ", Samples)
@@ -99,7 +99,7 @@ def Train(model, trainloader, validateloader):
 			#Load Clean & Noisy sample as tensor of data_type float
 			noisy = torch.tensor(noisy, device = device).float()
 			clean = torch.tensor(clean, device = device).float()
-			
+
 			#Train the sample_pair
 			optimizer.zero_grad()
 
@@ -134,7 +134,7 @@ def Train(model, trainloader, validateloader):
 
 		#Save Model every 10 epochs
 		if (epoch+1) % 1 == 0:
-			Model_Name = "Model_Epoch_" + str(epoch+1) + ".pth"
+			Model_Name = f"Model_Epoch_{str(epoch + 1)}.pth"
 			print("Saving Model : ", Model_Name)
 			torch.save(model.state_dict(), Model_Dir + Model_Name)
 

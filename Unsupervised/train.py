@@ -38,7 +38,7 @@ class Trainer:
             log = {"loss": loss.item()}
             wandb.log(log)
             if indx % self.config["eval_every"] == 0 and indx != 0:
-                self.validate("{}_{}".format(epoch, indx))
+                self.validate(f"{epoch}_{indx}")
     
     def validate(self, name):
         try:
@@ -46,20 +46,46 @@ class Trainer:
         except:
             self.val_iter = iter(self.train_dataloader)
             noisy, _ = next(self.val_iter)
-        audio_utils.write_wav(os.path.join(self.output_dir, "noisy_{}.wav".format(name)), noisy)
-        wandb.log({"noisy": [wandb.Audio(os.path.join(self.output_dir, "noisy_{}.wav".format(name)), caption="noisy", sample_rate=16000)]})
+        audio_utils.write_wav(
+            os.path.join(self.output_dir, f"noisy_{name}.wav"), noisy
+        )
+        wandb.log(
+            {
+                "noisy": [
+                    wandb.Audio(
+                        os.path.join(self.output_dir, f"noisy_{name}.wav"),
+                        caption="noisy",
+                        sample_rate=16000,
+                    )
+                ]
+            }
+        )
 
         with torch.no_grad():
             m = noisy.mean()
             noisy = (noisy - m)
             noisy = torch.tensor([noisy]).to(self.device)
             out = self.model(noisy)
-        
+
         clean = np.squeeze(out.cpu().detach().numpy())
         clean = clean + m
-        audio_utils.write_wav(os.path.join(self.output_dir, "clean_{}.wav".format(name)), clean)
-        wandb.log({"clean": [wandb.Audio(os.path.join(self.output_dir, "clean_{}.wav".format(name)), caption="clean", sample_rate=16000)]})
-        torch.save(self.model.state_dict(), os.path.join(self.output_dir, "{}.pth".format(name)))
+        audio_utils.write_wav(
+            os.path.join(self.output_dir, f"clean_{name}.wav"), clean
+        )
+        wandb.log(
+            {
+                "clean": [
+                    wandb.Audio(
+                        os.path.join(self.output_dir, f"clean_{name}.wav"),
+                        caption="clean",
+                        sample_rate=16000,
+                    )
+                ]
+            }
+        )
+        torch.save(
+            self.model.state_dict(), os.path.join(self.output_dir, f"{name}.pth")
+        )
 
     def run(self):
         for epoch in range(self.config["epochs"]):

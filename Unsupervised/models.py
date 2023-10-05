@@ -33,10 +33,7 @@ class ConvBlock(nn.Module):
         super(ConvBlock, self).__init__()
         self.conv_1 = nn.Conv1d(in_dim, hidden_dim, kernel_size=1)
         self.casual = casual
-        if casual:
-            self.padding = (kernel_size-1)*dilation
-        else:
-            self.padding = padding
+        self.padding = (kernel_size-1)*dilation if casual else padding
         self.conv_2 = nn.Conv1d(hidden_dim, hidden_dim, kernel_size, dilation=dilation, groups=hidden_dim, padding=self.padding)
         self.conv_3 = nn.Conv1d(hidden_dim, in_dim, kernel_size=1)
         self.activ_1 = nn.PReLU()
@@ -75,7 +72,7 @@ class ConvTas(nn.Module):
 
         self.conv_blocks = nn.ModuleList()
         count = 0
-        for i in range(num_repeats):
+        for _ in range(num_repeats):
             for j in range(num_blocks):
                 if count<non_casual:
                     self.conv_blocks.append(ConvBlock(block_dim, hidden_dim, kernel_size=block_kernel, padding=2**j, dilation=2**j))
@@ -119,8 +116,7 @@ class ConvTas(nn.Module):
 def center_trim(tensor, reference):
     if hasattr(reference, "size"):
         reference = reference.size(-1)
-    delta = tensor.size(-1) - reference
-    if delta:
+    if delta := tensor.size(-1) - reference:
         tensor = tensor[..., delta // 2:-(delta - delta // 2)]
     return tensor
 
